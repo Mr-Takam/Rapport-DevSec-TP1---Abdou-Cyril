@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d'Audit de Sécurité - Efrei Paris</title>
+    
+    <link rel="icon" 
+          type="image/svg+xml" 
+          href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    
+    <style>
+      /* --- CONFIGURATION GLOBALE --- */
+        :root {
+            --primary-color: #003b7e; /* Bleu Efrei approximatif */
+            --secondary-color: #009fe3; /* Bleu clair */
+            --accent-color: #e63946; /* Rouge pour les alertes */
+            --text-color: #333;
+            --light-bg: #f4f7f6;
+            --code-bg: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+
+        /* --- PAGE DE GARDE --- */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #001f4d 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .school-name {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            font-weight: bold;
+        }
+
+        .report-title {
+            font-size: 3.5rem;
+            color: #009fe3;
+            margin: 0;
+            line-height: 1.2;
+            font-weight: 700;
+        }
+
+        .report-subtitle {
+            font-size: 1.8rem;
+            color: #009fe3;
+            margin-top: 1rem;
+            font-weight: 300;
+            opacity: 0.55;
+        }
+
+        /* Remplacer l'ancien .authors-box par ceci : */
+        .authors-box {
+            margin-top: 4rem;
+            background: rgba(255, 255, 255, 0.1); /* Effet verre */
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            
+            /* Nouvelle disposition Flexbox */
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0; /* Le padding est géré par les colonnes */
+            width: 100%;
+            max-width: 800px; /* Largeur contenue pour l'esthétique */
+            text-align: left; /* Important : on aligne le texte à gauche dans les boites */
+        }
+
+        /* Nouveaux styles pour les colonnes */
+        .box-col {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left-col {
+            border-right: 1px solid rgba(255, 255, 255, 0.3); /* Ligne de séparation */
+        }
+
+        .meta-group {
+            margin-bottom: 1.5rem;
+        }
+        .meta-group:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Styles typographiques pour les labels et valeurs */
+        .label {
+            display: block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .value {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 0.2rem;
+        }
+
+        /* --- STRUCTURE DU CONTENU --- */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-top: 3rem;
+            page-break-before: always; /* Saut de page avant chaque grand titre */
+        }
+        
+        h1:first-of-type {
+            page-break-before: auto;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 2rem;
+            border-left: 5px solid var(--secondary-color);
+            padding-left: 1rem;
+        }
+
+        h3 {
+            color: #444;
+            margin-top: 1.5rem;
+        }
+
+        /* --- SOMMAIRE --- */
+        .toc {
+            background-color: var(--light-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 4rem;
+        }
+        .toc ul { list-style-type: none; padding-left: 0; }
+        .toc li { margin-bottom: 0.5rem; border-bottom: 1px dashed #ccc; }
+        .toc a { text-decoration: none; color: var(--primary-color); font-weight: 600; display: flex; justify-content: space-between; }
+
+        /* Style pour les sous-sections du sommaire */
+        .sub-toc {
+            padding-left: 20px !important;
+            font-size: 0.95rem;
+            border-bottom: 1px dotted #e0e0e0 !important; /* Trait plus discret pour les sous-items */
+        }
+
+        .sub-toc a {
+            font-weight: 400 !important; /* Texte normal, pas gras */
+            color: #555 !important;
+        }
+        /* --- COMPOSANTS SPÉCIFIQUES --- */
+        
+        /* Matrice de Risque (Style Tableau) */
+        .risk-matrix-placeholder {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        .risk-matrix-placeholder th, .risk-matrix-placeholder td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .risk-high { background-color: #ffcccc; color: #a00; font-weight: bold; }
+        .risk-med { background-color: #fff4cc; color: #996600; }
+        .risk-low { background-color: #ccffcc; color: #006600; }
+
+        /* Boite de Vulnérabilité */
+        .vuln-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .vuln-header {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .severity-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+        }
+        .sev-critical { background-color: #d90429; }
+        .sev-high { background-color: #fb8500; }
+        .sev-medium { background-color: #ffb703; color: #333; }
+
+        .vuln-content {
+            padding: 1.5rem;
+        }
+
+        /* Captures d'écran */
+        .screenshot-box {
+            background-color: #eee;
+            border: 2px dashed #aaa;
+            color: #666;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        .screenshot-box img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .caption {
+            font-style: italic;
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        /* Code Source */
+        pre {
+            background-color: var(--code-bg);
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Notes importantes */
+        .info-box {
+            background-color: #e7f5ff;
+            border-left: 4px solid var(--secondary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        /* --- PRINT MEDIA QUERIES --- */
+        @media print {
+            body { background-color: #fff; }
+            .cover-page { height: 100vh; background: white; color: black; }
+            .cover-page h1 { color: black; }
+            .authors-box { background: none; border: 1px solid #000; color: black; }
+            .toc { background: none; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="cover-page">
+        <div class="school-name">EFREI PARIS - Université Paris Panthéon-Assas</div>
+        <h1 class="report-title">Audit de Sécurité Applicatif</h1>
+        <h2 class="report-subtitle">Application Bancaire JavaEE</h2>
+        
+        <div class="authors-box">
+            <div class="box-col left-col">
+                <span class="label">Auteurs</span>
+                <span class="value">Cyril TAKAM</span>
+                <span class="value">Abdou Khadre DIOP</span>
+            </div>
+            <div class="box-col right-col">
+                <div class="meta-group">
+                    <span class="label">Date</span>
+                    <span class="value">Novembre 2024</span>
+                </div>
+                <div class="meta-group">
+                    <span class="label">Module</span>
+                    <span class="value">Développement Sécurisé - Ingé 3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="toc">
+            <h2>Sommaire</h2>
+            <ul>
+                <li><a href="#intro">1. Présentation de la Cible & Contexte</a></li>
+                <li class="sub-toc"><a href="#intro-fonc">1.1 Description Fonctionnelle</a></li>
+                <li class="sub-toc"><a href="#intro-tech">1.2 Architecture & Stack Technique</a></li>
+                <li class="sub-toc"><a href="#intro-uml">1.3 Modélisation UML (Classes & Séquences)</a></li>
+
+                <li><a href="#methodo">2. Démarche d'Audit et Outils Utilisés</a></li>
+                <li class="sub-toc"><a href="#methodo-static">2.1 Analyse Statique (Code Review)</a></li>
+                <li class="sub-toc"><a href="#methodo-dynamic">2.2 Tests d'Intrusion Dynamiques (Pentest)</a></li>
+                <li class="sub-toc"><a href="#methodo-auto">2.3 Scans Automatisés (OWASP ZAP)</a></li>
+
+                <li><a href="#synthese">3. Synthèse Managériale (Executive Summary)</a></li>
+                <li class="sub-toc"><a href="#risk-matrix">3.1 Matrice des Risques</a></li>
+                <li class="sub-toc"><a href="#global-rating">3.2 Évaluation Globale de Sécurité</a></li>
+
+                <li><a href="#details">4. Analyse Détaillée des Vulnérabilités</a></li>
+                <li class="sub-toc"><a href="#vuln-sqli">4.1 Injection SQL (SQLi)</a></li>
+                <li class="sub-toc"><a href="#vuln-rce">4.2 Injection de Code (RCE)</a></li>
+                <li class="sub-toc"><a href="#vuln-access">4.3 Contrôle d'Accès Insuffisant (IDOR/BAC)</a></li>
+                <li class="sub-toc"><a href="#vuln-auth">4.4 Authentification Faible & Rate Limiting</a></li>
+                <li class="sub-toc"><a href="#vuln-xss">4.5 Cross-Site Scripting (XSS)</a></li>
+                <li class="sub-toc"><a href="#vuln-csrf">4.6 Absence de protection CSRF</a></li>
+                <li class="sub-toc"><a href="#vuln-others">4.7 Exposition de Données Sensibles (Config/Logs)</a></li>
+                <li class="sub-toc"><a href="#vuln-input">4.8 Validation d'Entrée Insuffisante</a></li>
+
+                <li><a href="#reco">5. Plan de Remédiation et Recommandations</a></li>
+                
+                <li><a href="#conclu">6. Conclusion Générale</a></li>
+            </ul>
+        </div>
+
+        <h1 id="intro">1. Présentation de la Cible & Contexte</h1>
+        <p>
+            L'application auditée, intitulée <em>tp1-banque-unsecured-v0</em>, est une plateforme bancaire démonstrative conçue sur une architecture JavaEE. 
+            Elle simule des opérations bancaires basiques (consultation de solde, virements) et gestion d'utilisateurs avec une ségrégation des droits (RBAC).
+        </p>
+        <p>
+            L'audit vise à évaluer la robustesse de cette application face aux vecteurs d'attaques standards (OWASP Top 10), en considérant son état actuel "Non Sécurisé" (v0).
+        </p>
+
+        <h2 id="intro-fonc">1.1 Description Fonctionnelle</h2>
+        <p>
+            L'application gère deux niveaux de privilèges distincts, identifiés dans le code via le cookie <code>ClientRole</code> :
+        </p>
+        <ul>
+            <li><strong>Rôle CLIENT :</strong> Permet l'authentification, la consultation de ses propres comptes et l'exécution de virements (crédit/débit) via une expression arithmétique.</li>
+            <li><strong>Rôle ADMIN :</strong> Dispose des droits étendus incluant la création de nouveaux comptes bancaires et la vision globale sur l'ensemble des comptes clients (recherche par ID ou email).</li>
+        </ul>
+
+        <h2 id="intro-tech">1.2 Architecture & Stack Technique</h2>
+        <p>
+            L'analyse du fichier <code>pom.xml</code> et du code source révèle une architecture MVC (Modèle-Vue-Contrôleur) "Raw" (sans framework de haut niveau type Spring), reposant sur les technologies suivantes :
+        </p>
+        
+        <table class="risk-matrix-placeholder" style="text-align: left;">
+            <tr>
+                <td style="background: #f4f7f6; font-weight: bold; width: 30%;">Langage & Runtime</td>
+                <td>Java 21 (OpenJDK)</td>
+            </tr>
+            <tr>
+                <td style="background: #f4f7f6; font-weight: bold;">Serveur d'Application</td>
+                <td>Apache Tomcat 11.x (Jakarta EE 6.0 Servlet API)</td>
+            </tr>
+            <tr>
+                <td style="background: #f4f7f6; font-weight: bold;">Persistance</td>
+                <td>JDBC pur (MySQL Connector 8.3.0) sans ORM. Connexion directe à MySQL via <code>DriverManager</code>.</td>
+            </tr>
+            <tr>
+                <td style="background: #f4f7f6; font-weight: bold;">Frontend</td>
+                <td>JSP (JavaServer Pages) avec JSTL 3.0.</td>
+            </tr>
+            <tr>
+                <td style="background: #f4f7f6; font-weight: bold;">Composant Critique</td>
+                <td><strong>Nashorn Script Engine</strong> (<code>org.openjdk.nashorn</code> v15.6) utilisé pour le calcul des transactions.</td>
+            </tr>
+        </table>
+
+        <h2 id="intro-uml">1.3 Modélisation UML</h2>
+        <p>
+            Conformément aux exigences du livrable, la modélisation de l'application a été structurée en trois vues distinctes. Cette segmentation permet de mieux appréhender les responsabilités de chaque couche (Modèle, Persistance, Contrôleur) et d'identifier plus facilement les points d'intégration critiques pour la sécurité.
+        </p>
+        
+        <h3 id="uml-model">1.3.1. Modèle et Logique Métier (Cœur de la Banque)</h3>
+        <p>
+            Ce diagramme met en évidence les entités de base (<code>User</code>, <code>Account</code>) et la logique métier centralisée. La classe <code>Bank</code> utilise le patron <strong>Singleton</strong> et expose les méthodes fonctionnelles, notamment la transaction bancaire <code>updateBankAccount</code>, qui s'avèrera critique pour l'Injection de Code.
+        </p>
+        <div class="screenshot-box">
+            <img src="https://i.postimg.cc/JznqN9ng/Mermaid_1.png" alt="Diagramme de classes UML du Modèle">
+        </div>
+        <span class="caption">Figure 1a : Modélisation des classes de données et de la logique métier (`model`).</span>
+        
+        <br>
+        
+        <h3 id="uml-persistence">1.3.2. Couche de Persistance (Pattern DAO)</h3>
+        <p>
+            Cette vue se concentre sur le patron <strong>DAO (Data Access Object)</strong> implémenté via l'interface <code>IPersistence</code> et son implémentation concrète <code>JdbcMySQLMainPersistence</code>. Elle montre l'isolement entre le cœur de l'application et la base de données. Tous les appels SQL transitent par ces classes, qui sont le point névralgique des vulnérabilités d'Injection SQL.
+        </p>
+        <div class="screenshot-box">
+            <img src="https://i.postimg.cc/4xd56rdj/Mermaid_2.png" alt="Diagramme de classes UML de la Persistance">
+        </div>
+        <span class="caption">Figure 1b : Modélisation de la couche d'accès aux données (`persistence`).</span>
+        
+        <br>
+        
+        <h3 id="uml-controller">1.3.3. Couche Contrôleur et Sécurité</h3>
+        <p>
+            Cette dernière vue présente la couche de présentation (les Servlets, ou <strong>Contrôleurs</strong>) et l'intégration des mécanismes de sécurité rudimentaires (classe <code>Authentication</code>). Elle illustre comment l'autorisation est gérée dans chaque Servlets via <code>getAuthorization</code>, et montre l'usage des exceptions spécifiques (<code>UserAthorizationException</code>) en cas de violation d'accès.
+        </p>
+        <div class="screenshot-box">
+            <img src="https://i.postimg.cc/5203BZ0R/Mermaid_3.png" alt="Diagramme de classes UML des Contrôleurs et Sécurité">
+        </div>
+        <span class="caption">Figure 1c : Modélisation de la couche contrôleur (`controllers`) et de sécurité.</span>
+
+        <h1 id="methodo">2. Démarche d'Audit et Outils Utilisés</h1>
+        <p>
+            L'audit de sécurité a été mené en se basant sur la méthodologie des tests d'intrusion de l'OWASP Testing Guide (v4/v5), combinant rigueur statique et validation dynamique pour couvrir l'ensemble du périmètre applicatif.
+        </p>
+
+        <h2 id="methodo-static">2.1 Analyse Statique (Code Review)</h2>
+        <p>
+            Cette phase, réalisée en mode <strong>Boîte Blanche</strong> a consisté à inspecter manuellement les fichiers Java et JSP critiques afin d'identifier les anti-patterns de sécurité (Code smells) :
+            <ul>
+                <li><strong>Recherche d'Injection :</strong> Concaténation de chaînes SQL ou usage de fonctions d'évaluation dynamique (e.g., <code>ScriptEngine.eval()</code> dans <code>model/Bank.java</code>).</li>
+                <li><strong>Contrôle d'Accès :</strong> Examen des Servlets (e.g., <code>TransactionServlet</code>) pour l'absence de vérification d'autorisation ou l'usage de cookies clients modifiables pour le rôle.</li>
+                <li><strong>Exposition de Données :</strong> Identification des identifiants de connexion codés en dur et des sorties non encodées (e.g., dans <code>view_accounts.jsp</code>).</li>
+            </ul>
+        </p>
+
+        <h2 id="methodo-dynamic">2.2 Tests d'Intrusion Dynamiques (Pentest)</h2>
+        <p>
+            Cette phase a validé l'exploitabilité des failles découvertes statiquement et a cherché des vulnérabilités supplémentaires en conditions réelles.
+        </p>
+
+        <h3 id="methodo-manual">2.2.1 Tests Manuels (Boîte Noire & Blanche)</h3>
+        <p>
+            Les tests manuels ont été conduits selon deux modes :
+            <ul>
+                <li><strong>Boîte Noire</strong> : Simulation d'un attaquant externe n'ayant aucune connaissance du code. Ciblée sur la découverte des XSS et la tentative de contournement des contrôles d'authentification/session (rate limiting).</li>
+                <li><strong>Boîte Blanche</strong> : Réalisation d'attaques ciblées, guidées par la revue de code, pour confirmer l'exploitabilité des Injections SQL et de Code sur les points précis identifiés dans la couche de persistance et le modèle.</li>
+            </ul>
+        </p>
+        
+        <h3 id="methodo-auto">2.2.2 Scans Automatisés (OWASP ZAP)</h3>
+        <p>
+            L'outil <strong>OWASP ZAP</strong> (Zed Attack Proxy) a été utilisé pour le scanning automatisé, couvrant l'exploration des pages (Spider) et la recherche proactive de vulnérabilités (Active Scan). Les résultats de ZAP ont permis de confirmer la présence des failles Reflected XSS et le manque de protection CSRF, renforçant les conclusions de l'analyse manuelle.
+        </p>
+
+        <h1 id="synthese">3. Synthèse Managériale (Executive Summary)</h1>
+        <p>
+            Cette section présente une vue d'ensemble des risques identifiés dans l'application <code>tp1-banque-unsecured-v0</code>. L'évaluation est basée sur le croisement de l'<strong>Impact</strong> (conséquences de l'exploitation) et de la <strong>Probabilité</strong> (facilité d'exploitation) pour déterminer le niveau de risque général.
+        </p>
+
+        <h2 id="risk-matrix">3.1 Matrice des Risques</h2>
+        <p>
+            Le tableau ci-dessous récapitule les huit vulnérabilités découvertes, classées selon leur criticité (CVSS / Risque final) :
+        </p>
+
+        <table class="risk-matrix-placeholder">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">ID</th>
+                    <th style="width: 30%;">Vulnérabilité</th>
+                    <th style="width: 15%;">OWASP Top 10</th>
+                    <th style="width: 15%;">Sévérité (CVSS)</th>
+                    <th style="width: 15%;">Probabilité</th>
+                    <th style="width: 20%;">Niveau de Risque</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Injection SQL (SQLi)</td>
+                    <td>A03: Injection</td>
+                    <td>Critique (9.8)</td>
+                    <td>Élevée</td>
+                    <td class="risk-high">CRITIQUE</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Injection de Code (RCE via Nashorn)</td>
+                    <td>A03: Injection</td>
+                    <td>Critique (9.1)</td>
+                    <td>Élevée</td>
+                    <td class="risk-high">CRITIQUE</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Contrôle d'Accès Insuffisant (ABAC / IDOR)</td>
+                    <td>A01: Broken Access Control</td>
+                    <td>Critique (9.1)</td>
+                    <td>Élevée</td>
+                    <td class="risk-high">CRITIQUE</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Authentification Faible (Mots de passe en clair / Rate Limit Côté Client)</td>
+                    <td>A07: Identification Failures</td>
+                    <td>Élevé (7.5)</td>
+                    <td>Moyenne</td>
+                    <td class="risk-med">ÉLEVÉ</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>Cross-Site Scripting (XSS Stored/Reflected)</td>
+                    <td>A03: Injection</td>
+                    <td>Moyen (6.1)</td>
+                    <td>Élevée</td>
+                    <td class="risk-med">ÉLEVÉ</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Absence de protection CSRF</td>
+                    <td>A01: Broken Access Control</td>
+                    <td>Moyen (6.5)</td>
+                    <td>Élevée</td>
+                    <td class="risk-med">ÉLEVÉ</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Exposition de Données Sensibles (DB credentials & Logs)</td>
+                    <td>A02: Cryptographic Failures</td>
+                    <td>Moyen (5.3)</td>
+                    <td>Moyenne</td>
+                    <td class="risk-low">MOYEN</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Validation d'Entrée Insuffisante</td>
+                    <td>A03: Injection</td>
+                    <td>Moyen (6.5)</td>
+                    <td>Moyenne</td>
+                    <td class="risk-low">MOYEN</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="global-rating">3.2 Évaluation Globale de Sécurité</h2>
+
+        <div class="info-box">
+            <h3 style="margin-top: 0; color: var(--accent-color);">Verdict : Non Conforme (Risque Critique)</h3>
+            <p>
+                L'application bancaire présente un <strong>Niveau de Sécurité TRÈS FAIBLE</strong> en raison de la présence simultanée de trois failles de criticité maximale (CRITIQUE) : l'Injection SQL, l'Injection de Code et un Contrôle d'Accès défaillant.
+            </p>
+            <p>
+                Ces failles permettent une élévation de privilèges instantanée, la lecture/modification de toutes les données bancaires, et la compromission totale du serveur hôte. Le risque est systémique et aucune mise en production n'est envisageable sans une refonte complète des mécanismes de sécurité fondamentaux.
+            </p>
+        </div>
+
+        <h1 id="details">4. Analyse Détaillée des Vulnérabilités</h1>
+        
+        <p>
+            Les vulnérabilités sont présentées par ordre de criticité décroissante, de la faille la plus dangereuse (CRITIQUE) à la faille MOYENNE. Chaque carte de vulnérabilité contient l'extrait de code responsable et un scénario d'exploitation documenté.
+        </p>
+        
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-sqli">4.1 Injection SQL (SQL Injection)</h3>
+                <span class="severity-badge sev-critical">Critique (CVSS 9.8)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    La construction des requêtes SQL par concaténation de chaînes de caractères incluant des entrées utilisateur expose l'intégralité du système à l'injection SQL. L'impact est <strong>Critique</strong> et mène à un accès complet à la base de données, permettant l'extraction de toutes les données sensibles et la modification des soldes ou des rôles utilisateurs.
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A03:2021 (Injection) / CWE-89 (SQL Injection).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/persistence/users/JdbcUsersPersistence.java</code></p>
+                <pre>
+public User findUserByEmailAndPwd(String email, String pwd) throws Exception {
+    String sql = "SELECT email, name, roles 
+                  FROM users 
+                  WHERE email = '" + email + "' and password = '" + pwd + "'"; // L. 44-45
+}
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    L'attaquant utilise la charge utile <code>' OR '1'='1</code> dans les champs Email et Password pour contourner le processus d'authentification. La requête devient toujours vraie (<code>... WHERE email = '...' OR '1'='1' ...</code>).
+                </p>
+                
+                <div class="screenshot-box">
+                    <img src="https://i.postimg.cc/5056G2y0/login.png" alt="[PLACEHOLDER : Capture d'écran du formulaire de login/logout après un bypass réussi]">
+                </div>
+                <span class="caption">Figure 2a : Preuve de l'injection SQL permettant un Bypass d'Authentification (Affichage du nom de l'utilisateur ADMIN connecté sans mot de passe).</span>
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Critique :</strong> Compromission des comptes, vol d'identifiants, accès et manipulation des données financières.</p>
+            </div>
+        </div>
+        
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-rce">4.2 Injection de Code (RCE via Nashorn)</h3>
+                <span class="severity-badge sev-critical">Critique (CVSS 9.1)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    La classe <code>Bank.java</code> utilise le moteur JavaScript <strong>Nashorn</strong> (`ScriptEngine.eval()`) pour évaluer une expression arithmétique fournie par l'utilisateur lors d'une transaction. Cette approche est extrêmement dangereuse, car elle permet à un attaquant d'injecter du code JavaScript s'exécutant avec les privilèges du serveur (Remote Code Execution ou RCE).
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A03:2021 (Injection) / CWE-94 (Code Injection).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/model/Bank.java</code></p>
+                <pre>
+public void updateBankAccount(int accountId, String amountExpression) throws Exception {
+    ScriptEngineManager manager = new ScriptEngineManager(); // L. 59
+    ScriptEngine engine = manager.getEngineByName("js");
+    Number result = (Number) engine.eval(amountExpression); // L. 61 - Point de faille
+    double amount = result.doubleValue();
+    this.persistence.updateBalance(accountId, amount);
+}
+                </pre>
+                
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Dans le champ de montant de la transaction, l'attaquant injecte : <code>100; java.lang.Runtime.getRuntime().exec("commande_systeme")</code>.
+                </p>
+                
+                <div class="screenshot-box">
+                     <img src="https://i.postimg.cc/L6Ggn7c3/Injection_de_script.png" alt="[PLACEHOLDER : Capture d'écran de la console du serveur Tomcat/Eclipse montrant la sortie d'une commande système (ex: `whoami` ou lecture d'un fichier sensible) exécutée par l'expression de montant.]">
+                </div>
+                <span class="caption">Figure 2b : Exécution de code à distance (RCE) via l'injection de code JavaScript dans le champ de transaction.</span>
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Critique :</strong> Compromission complète du serveur d'application, exfiltration de données système, installation de backdoors.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-access">4.3 Contrôle d'Accès Insuffisant (Broken Access Control - IDOR)</h3>
+                <span class="severity-badge sev-critical">Critique (CVSS 9.1)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    Le contrôle d'accès est défaillant à trois niveaux : 1) Le rôle utilisateur est stocké dans un cookie modifiable (`ClientRole`). 2) La <code>TransactionServlet</code> ne vérifie ni l'authentification ni l'autorisation (accès direct). 3) Absence de vérification de l'appartenance du compte avant les modifications (IDOR, Insecure Direct Object Reference).
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A01:2021 (Broken Access Control) / CWE-639, CWE-284.
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/webapp/index.jsp</code> (Dépendance au cookie pour l'affichage du menu)</p>
+                <pre>
+&lt;c:if test="${cookie.ClientRole.value eq 'ADMIN'}"&gt;
+    &lt;li&gt;&lt;a href="./view/admin/create_bank_account_form.jsp"&gt;...&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="./view/admin/view_accounts_form.jsp"&gt;...&lt;/a&gt;&lt;/li&gt;
+&lt;/c:if&gt;
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Un utilisateur CLIENT (rôle "CLIENT") modifie manuellement son cookie <code>ClientRole</code> en "ADMIN" via les outils de développeur. Après rechargement, il accède aux fonctionnalités administrateur.
+                </p>
+                
+                <div class="screenshot-box">
+                    <img src="https://i.postimg.cc/DyR48D9g/changement_de_role.png" alt="[PLACEHOLDER : Capture d'écran montrant le cookie 'ClientRole' modifié en 'ADMIN' dans les outils de dev ET la page d'accueil affichant les liens d'administration.]">
+                </div>
+                <span class="caption">Figure 2c : Élévation de privilèges démontrée par la modification du cookie ClientRole.</span>
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Critique :</strong> Accès non autorisé aux fonctionnalités d'administration, création de comptes, manipulation des comptes d'autrui, violation du principe du moindre privilège.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-auth">4.4 Authentification Faible</h3>
+                <span class="severity-badge sev-high">Élevé (CVSS 7.5)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    Le stockage des mots de passe en <strong>clair</strong> dans la base de données est une faille fondamentale (CWE-256). De plus, le mécanisme de limitation des requêtes (anti-force brute) repose sur des cookies modifiables côté client (<code>nbRequetes1min</code>, <code>debutDelai</code>), le rendant inefficace.
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A07:2021 (Identification Failures) / CWE-256, CWE-307.
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/controllers/AutheticationServlet.java</code> (Méthode <code>limiteRequetes</code>)</p>
+                <pre>
+Cookie nbCookie = rechercherCookie(request, "nbRequetes1min"); // L. 77
+//...
+if (nbCookie != null) { // L. 81
+    try { nbRequetes = Integer.parseInt(nbCookie.getValue()); } catch (Exception e) { nbRequetes = 0; }
+}
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Un attaquant utilise Burp Suite ou un outil similaire pour soumettre des milliers de tentatives de login. En configurant l'outil pour <strong>ignorer ou supprimer les cookies</strong> de rate limiting (<code>nbRequetes1min</code> et <code>debutDelai</code>) à chaque requête, il contourne la limite de 3 tentatives par minute.
+                </p>
+                
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Élevé :</strong> Permet les attaques par force brute ou par dictionnaire et le vol d'identité. Le stockage en clair aggrave la compromission de la base de données.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-xss">4.5 Cross-Site Scripting (XSS Stored & Reflected)</h3>
+                <span class="severity-badge sev-medium">Moyen (CVSS 6.1)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    L'application ne procède à aucun encodage des sorties (absence de la balise JSTL <code>&lt;c:out&gt;</code>) pour les données récupérées de la base de données (XSS Stored) et pour les paramètres affichés via l'URL (XSS Reflected). Cela permet l'injection et l'exécution de scripts malveillants dans le navigateur des victimes.
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A03:2021 (Injection) / CWE-79 (Cross-site Scripting).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/webapp/view/view_accounts.jsp</code></p>
+                <pre>
+&lt;tr&gt;
+    &lt;!-- NOT ENCODED -&gt; Stored XSS possible --&gt;
+    &lt;td&gt;${account.accountId}&lt;/td&gt;
+    &lt;td&gt;${account.owner.email}&lt;/td&gt;
+    &lt;td&gt;${account.owner.name}&lt;/td&gt; &lt;!-- Point d'injection --&gt;
+    &lt;td&gt;${account.balance}&lt;/td&gt;
+&lt;/tr&gt;
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Un attaquant modifie son nom d'utilisateur en <code>&lt;script&gt;alert('XSS STOCKED PAR CYRIL ET ABDOU')&lt;/script&gt;</code>. Lorsqu'un administrateur consulte la page des comptes (<code>view_accounts.jsp</code>), le script s'exécute, prouvant le XSS Stored.
+                </p>
+                
+
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Moyen :</strong> Vol de cookies de session (hijacking de session), exécution d'actions non désirées au nom de la victime.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-csrf">4.6 Absence de protection CSRF</h3>
+                <span class="severity-badge sev-medium">Moyen (CVSS 6.5)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    Aucune des requêtes POST critiques (transaction, création de compte) ne contient de jeton anti-CSRF (Cross-Site Request Forgery). Cela permet à un attaquant de forcer un utilisateur authentifié à soumettre des requêtes à son insu (par exemple, un virement bancaire).
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A01:2021 (Broken Access Control) / CWE-352 (CSRF).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/controllers/TransactionServlet.java</code> et <code>src/main/webapp/view/client/do_transaction.jsp</code></p>
+                <pre>
+// Aucun jeton CSRF n'est inclus ou vérifié par le TransactionServlet
+@Override
+protected void doPost(HttpServletRequest req, HttpServletResponse resp) 
+throws ServletException, IOException {
+    // Aucune vérification de token
+    int accountId= Integer.parseInt(req.getParameter("pAccountId"));
+    String amountExpression = req.getParameter("pAmountExpression");
+    // ... exécute la transaction ...
+}
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Un utilisateur authentifié est piégé pour charger une page web malveillante (contrôlée par l'attaquant) qui exécute automatiquement une requête POST vers <code>/transaction</code> avec des paramètres frauduleux, par exemple pour débiter son compte de 1000€.
+                </p>
+                
+
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Moyen à Élevé :</strong> Transactions frauduleuses ou modifications de données sans le consentement de l'utilisateur.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-others">4.7 Exposition de Données Sensibles (Configuration)</h3>
+                <span class="severity-badge sev-medium">Moyen (CVSS 5.3)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    Les identifiants de connexion à la base de données (utilisateur `root`, mot de passe vide ou en clair) sont codés en dur dans la classe <code>JdbcMySQLMainPersistence.java</code>. Toute fuite de code source expose directement les clés du système. De plus, les requêtes SQL (y compris les mots de passe en clair) sont imprimées dans la console (`System.out.println`).
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A02:2021 (Cryptographic Failures) / CWE-312 (Cleartext Storage).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/persistence/JdbcMySQLMainPersistence.java</code></p>
+                <pre>
+private String dbUserName= "root"; // L. 28
+private String udbUserPassword="root"; // L. 29
+// ...
+this.conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/... (dbName...)", 
+                                         dbUserName, 
+                                         udbUserPassword); // L. 35
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    Le scénario principal est l'accès aux identifiants via le code source (fuite de code, accès physique au serveur) ou l'analyse des logs (fuite des mots de passe en clair).
+                </p>
+                
+
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Moyen :</strong> Facilitation d'autres attaques et violation des données d'authentification.</p>
+            </div>
+        </div>
+
+        <div class="vuln-card">
+            <div class="vuln-header">
+                <h3 id="vuln-input">4.8 Validation d'Entrée Insuffisante</h3>
+                <span class="severity-badge sev-medium">Moyen (CVSS 6.5)</span>
+            </div>
+            <div class="vuln-content">
+                <h4>Description et Impact</h4>
+                <p>
+                    L'application suppose que les paramètres reçus sont dans le bon format (e.g., numérique ou chaîne valide) et procède à un cast ou une utilisation immédiate sans vérification de contenu. Cela permet à un attaquant de provoquer des exceptions (Déni de Service Applicatif) ou de contourner les attentes de l'application (facilitation des injections).
+                </p>
+                <p>
+                    <strong>Codes de Référence :</strong> OWASP A03:2021 (Injection) / CWE-20 (Improper Input Validation).
+                </p>
+
+                <h4>Code Vulnérable (Preuve Statique)</h4>
+                <p>Fichier : <code>src/main/java/controllers/TransactionServlet.java</code></p>
+                <pre>
+// Aucune validation de type avant la conversion
+int accountId= Integer.parseInt(req.getParameter("pAccountId")); // L. 28
+String amountExpression = req.getParameter("pAmountExpression"); // L. 29
+                </pre>
+
+                <h4>Preuve de Concept (Scénario d'attaque)</h4>
+                <p>
+                    L'attaquant envoie la valeur "ABC" pour le paramètre numérique `pAccountId`. La fonction <code>Integer.parseInt()</code> lève une <code>NumberFormatException</code> non gérée, pouvant afficher une trace de pile complète au client (fuite d'information).
+                </p>
+                
+                
+                <h4>Analyse d'Impact</h4>
+                <p><strong>Impact Moyen :</strong> Peut entraîner un Déni de Service ciblé et faciliter la reconnaissance par l'exposition des traces d'erreurs internes.</p>
+            </div>
+        </div>
+
+        <h1 id="reco">5. Plan de Remédiation et Recommandations</h1>
+                
+        <div class="info-box">
+            <h3 style="margin-top: 0; color: var(--accent-color);">État Global : Non Conforme (Urgence Critique)</h3>
+            <p>
+                L'application est considérée comme <strong>NON SÉCURISÉE</strong> et ne doit sous aucun prétexte être déployée en production. Les actions de remédiation doivent être priorisées et implémentées immédiatement.
+            </p>
+        </div>
+
+        <h2 id="reco-actions">5.1 Actions Immédiates (Critical Fixes)</h2>
+        <p>
+            Ces correctifs ciblent les vulnérabilités de criticité maximale (CRITIQUE : SQL Injection, Code Injection, Broken Access Control) qui permettent la compromission totale du système.
+        </p>
+        <ul>
+            <li><strong>Injection SQL (SQLi) :</strong> Remplacer toutes les concaténations SQL dans les classes <code>persistence/</code> par des objets <strong>PreparedStatement</strong>.</li>
+            <li><strong>Injection de Code (RCE) :</strong> Supprimer l'usage de <code>ScriptEngine.eval()</code>pour le calcul des montants. Utiliser un parser arithmétique sécurisé ou des fonctions Java natives.</li>
+            <li><strong>Contrôle d'Accès :</strong> <strong>Désactiver la lecture du rôle utilisateur via le cookie</strong> (`ClientRole`). Le rôle doit être stocké uniquement côté serveur dans la <strong>Session HTTP</strong> et vérifié dans toutes les Servlets critiques (`TransactionServlet`, `ViewAccountServlet`, etc.).</li>
+            <li><strong>Authentification :</strong> Mettre en place d'urgence une fonction de <strong>hachage cryptographique fort</strong> (ex: bcrypt ou Argon2) pour les mots de passe avant stockage en base.</li>
+        </ul>
+
+        <h2 id="reco-midterm">5.2 Actions à Court et Moyen Terme</h2>
+        <p>
+            Ces actions visent à améliorer la robustesse générale de l'application et à éliminer les failles de niveau Élevé et Moyen.
+        </p>
+        <ul>
+            <li><strong>XSS :</strong> Encoder systématiquement toutes les sorties générées par l'utilisateur dans les pages JSP en utilisant la balise JSTL <code>&lt;c:out value="${variable}"/&gt;</code>.</li>
+            <li><strong>Protection CSRF :</strong> Implémenter le Synchronizer Token Pattern et vérifier la présence d'un jeton anti-CSRF pour toutes les requêtes POST (e.g., <code>/transaction</code>, <code>/auth</code>).</li>
+            <li><strong>Input Validation :</strong> Valider et typer strictement toutes les entrées utilisateur côté serveur (e.g., vérifier que <code>pAccountId</code> est bien un entier positif).</li>
+            <li><strong>Exposition de Données :</strong> Retirer les identifiants de connexion à la base de données du code source (`JdbcMySQLMainPersistence.java`) et les placer dans des variables d'environnement ou un gestionnaire de secrets.</li>
+            <li><strong>Rate Limiting :</strong> Transférer la logique de limitation des requêtes (anti-force brute) de l'<code>AutheticationServlet</code> pour qu'elle soit basée sur une logique côté serveur (IP source ou Session, et non des cookies clients).</li>
+        </ul>
+
+        <h1 id="conclu">6. Conclusion Générale</h1>
+
+        <div class="info-box" style="background-color: #ffe6e6; border-left-color: var(--accent-color);">
+            <h3 style="margin-top: 0; color: var(--accent-color);">Synthèse du Niveau de Sécurité</h3>
+            <p>
+                L'audit a révélé des failles critiques (Top 10 OWASP) permettant la compromission totale du serveur et des données. Le niveau de sécurité global de l'application est jugé TRÈS FAIBLE.
+            </p>
+            <p>
+                La simultanéité de l'Injection SQL (perte des données), l'Injection de Code (perte du serveur) et du Contrôle d'Accès défaillant rend cette application extrêmement dangereuse et inutilisable en l'état.
+            </p>
+        </div>
+
+        <h3>Perspectives</h3>
+        <p>
+            Il est fortement recommandé de procéder à une refonte complète des mécanismes de sécurité fondamentaux de l'application. Suite à l'implémentation de toutes les recommandations de correction, un nouvel audit de sécurité (pentest et revue de code) devra être effectué pour valider l'efficacité des mesures prises avant toute considération de mise en production.
+        </p>
+
+        <br>
+        <hr>
+
+        <p style="font-size: 0.9rem; text-align: right;">
+            <strong>Date de l'audit</strong> : Novembre 2024<br>
+            <strong>Auditeurs</strong> : Cyril TAKAM & Abdou Khadre DIOP<br>
+            <strong>Version de l'application</strong> : tp1-banque-unsecured-v0
+        </p>
+    </div>
+</body>
+</html>
